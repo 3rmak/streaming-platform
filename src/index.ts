@@ -1,10 +1,15 @@
 import express, { Express, Request, Response } from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import axios from 'axios';
+
 import * as fs from 'fs';
+import path from 'path';
 import * as cors from 'cors';
 import * as BodyParser from 'body-parser';
 import dotenv from 'dotenv';
+
+import LocalContentController from './controllers/local-content/local-content.controller';
 
 import { ClientToServerEvents } from './shared/socket/models/client-to-server-events';
 import { ServerToClientEvents } from './shared/socket/models/server-to-client-events';
@@ -23,7 +28,8 @@ const io = new Server<
 >(httpServer, { cors: { origin: '*' } });
 const port = process.env.PORT || 5000;
 const ioPort = Number(process.env.IO_PORT) || 3000;
-let videoSrcLink = '';
+const m3u8 =
+  'https://psi.stream.voidboost.cc/5d968aee9fbee1a5b22594514c2dc8bf:2023032319:52367a4e-a3e4-4a6d-ae7a-7533b22267b3/7/8/6/5/7/3/v9r76.mp4:hls:manifest.m3u8';
 
 app.use(
   cors.default({
@@ -37,35 +43,7 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');
 });
 
-app.post('/link', (req: Request, res: Response) => {
-  console.log(`req.body ${JSON.stringify(req.body)}`);
-  videoSrcLink = req.body.link;
-  console.log(`NEW LINK IS ${videoSrcLink}`);
-
-  return res.send();
-});
-
-app.get('/video', function (req, res) {
-  const range = req.headers.range;
-  if (!range) {
-    res.status(400).send('Requires Range header');
-  }
-  const videoPath = 'dead_poet_society.mp4';
-  const videoSize = fs.statSync(videoPath).size;
-  const CHUNK_SIZE = 10 ** 6;
-  const start = Number(range?.replace(/\D/g, ''));
-  const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
-  const contentLength = end - start + 1;
-  const headers = {
-    'Content-Range': `bytes ${start}-${end}/${videoSize}`,
-    'Accept-Ranges': 'bytes',
-    'Content-Length': contentLength,
-    'Content-Type': 'video/mp4',
-  };
-  res.writeHead(206, headers);
-  const videoStream = fs.createReadStream(videoPath, { start, end });
-  videoStream.pipe(res);
-});
+app.use('/api/local-content', LocalContentController);
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
