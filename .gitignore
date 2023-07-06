@@ -1,6 +1,6 @@
-.env
+node_modules
 
-/dist/
-/.idea/
-/node_modules/
-/dead_poet_society.mp4
+.env
+public/2s.mp4
+.idea
+/dist

@@ -1,70 +1,86 @@
-import express, { Express, Request, Response } from 'express';
-import { createServer } from 'http';
-import { Server, Socket } from 'socket.io';
-import axios from 'axios';
-
-import * as fs from 'fs';
-import path from 'path';
-import * as cors from 'cors';
-import * as BodyParser from 'body-parser';
 import dotenv from 'dotenv';
+import express, { Express, Request, Response, Router } from 'express';
+import * as fs from 'fs';
+import { createServer } from 'http';
+import * as path from 'path';
+import { Server } from 'socket.io';
 
-import LocalContentController from './controllers/local-content/local-content.controller';
-
-import { ClientToServerEvents } from './shared/socket/models/client-to-server-events';
-import { ServerToClientEvents } from './shared/socket/models/server-to-client-events';
-import { InternalServerEvents } from './shared/socket/models/internal-server-events';
-import { SocketData } from './shared/socket/models/socket-data';
+import { AppRoutes } from './routes';
 
 dotenv.config();
 
 const app: Express = express();
-const httpServer = createServer(app);
-const io = new Server<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  InternalServerEvents,
-  SocketData
->(httpServer, { cors: { origin: '*' } });
-const port = process.env.PORT || 5000;
-const ioPort = Number(process.env.IO_PORT) || 3000;
-const m3u8 =
-  'https://psi.stream.voidboost.cc/5d968aee9fbee1a5b22594514c2dc8bf:2023032319:52367a4e-a3e4-4a6d-ae7a-7533b22267b3/7/8/6/5/7/3/v9r76.mp4:hls:manifest.m3u8';
+const port = process.env.PORT;
 
-app.use(
-  cors.default({
-    origin: '*',
-  })
-);
-app.use(BodyParser.urlencoded());
-app.use(BodyParser.json());
+const server = createServer(app);
+const io = new Server(server);
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Express + TypeScript Server');
+io.on('connection', (socket) => {
+    console.log('a user connected');
+
+    socket.on('new-room', (roomName) => {
+      console.log('room created');
+    });
+
+    socket.on('new-room', (roomName) => {
+      console.log('room created');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('A user disconnected');
+    });
 });
 
-app.use('/api/local-content', LocalContentController);
+app.use('/api', AppRoutes);
 
-app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-});
-
-io.on('connection', (socket: Socket) => {
-  console.log(`new connection by ${socket.id}`);
-
-  socket.on('message', (message: string) => {
-    console.log(message);
-    io.emit('message', `${socket.id.substr(0, 2)} said ${message}`);
+app.route('/test').get((req: Request, res: Response) => {
+    console.log('here');
+    return res.send('init test')  ;
   });
 
-  // socket.on('play', () => {
-  //   console.log('play');
-  //   io.emit('play');
-  // });
+app.route('/auth').post((req: Request, res: Response)=> {
+  console.log('req.body', req.body);
 
-  socket.on('disconnect', () => {
-    console.log('a user disconnected!');
-  });
-});
+  return res.send('autorized');
+})
 
-io.listen(ioPort);
+app.listen(port, ()=> {
+  console.log(`server started on port ${port}`);
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// app.get('/videoplayer', (req: Request, res: Response) => {
+//   const range = req.headers.range ? req.headers.range : '';
+//   const videoPath = path.join(__dirname, 'public', '2s.mp4');
+//   const videoSize = fs.statSync(videoPath).size
+//   const chunkSize = 1 * 1e6;
+//   const start = Number(range.replace(/\D/g, ""))
+//   const end = Math.min(start + chunkSize, videoSize - 1)
+//   const contentLength = end - start + 1;
+//   const headers = {
+//       "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+//       "Accept-Ranges": "bytes",
+//       "Content-Length": contentLength,
+//       "Content-Type": "video/mp4"
+//   }
+//   res.writeHead(206, headers)
+//   const stream = fs.createReadStream(videoPath, {
+//       start,
+//       end
+//   })
+//   stream.pipe(res)
+// })
+
