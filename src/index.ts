@@ -4,30 +4,51 @@ import * as fs from 'fs';
 import { createServer } from 'http';
 import * as path from 'path';
 import { Server } from 'socket.io';
+import cors from 'cors';
 
 import { AppRoutes } from './routes';
 
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT;
+app.use(cors({ origin: process.env.CORS_ALLOWED_HOSTS }))
 
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+const roomId = '123';
 
 io.on('connection', (socket) => {
     console.log('a user connected');
+    io.sockets.in(roomId).emit('action', { message: `${socket.id} connected the room` });
 
-    socket.on('new-room', (roomName) => {
-      console.log('room created');
+    socket.on('message', (message) => {
+      console.log(`${socket.id} send ${message}`);
+      io.sockets.in(roomId).emit('message', { sender: socket.id, message: message });
+    })
+
+    // socket.on('new-room', (roomName) => {
+    //   console.log(`${socket.id} created room ${roomName}`);
+    // });
+
+    socket.on('join_room', (roomId) => {
+      console.log(`${socket.id} joined room ${roomId}`);
+      socket.join(roomId);
     });
 
-    socket.on('new-room', (roomName) => {
-      console.log('room created');
+    socket.on('play-pause', () => {
+      io.sockets.in(roomId).emit('play');
     });
+
+    socket.on('play', () => {});
 
     socket.on('disconnect', () => {
       console.log('A user disconnected');
+      io.sockets.in(roomId).emit('action',{ message: `${socket.id} disconnected the room` });
     });
 });
 
@@ -38,15 +59,10 @@ app.route('/test').get((req: Request, res: Response) => {
     return res.send('init test')  ;
   });
 
-app.route('/auth').post((req: Request, res: Response)=> {
-  console.log('req.body', req.body);
-
-  return res.send('autorized');
-})
-
-app.listen(port, ()=> {
+const port = process.env.PORT;
+server.listen(port, () => {
   console.log(`server started on port ${port}`);
-})
+});
 
 
 
