@@ -7,6 +7,8 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 
 import { AppRoutes } from './routes';
+import { PlayPauseDto } from './dto/play_pause.dto';
+import { PlayPauseActionEnum } from './dto/play_pause-action.enum';
 
 dotenv.config();
 
@@ -21,6 +23,11 @@ const io = new Server(server, {
 });
 
 const roomId = '123';
+const videoPath = path.join(process.cwd(), 'public', '2s.mp4');
+const chunkSize = 1 * 1e6;
+
+let videoState: PlayPauseActionEnum = PlayPauseActionEnum.PAUSE;
+let videoTime: number = 0;
 
 io.on('connection', (socket) => {
     console.log('a user connected');
@@ -38,13 +45,23 @@ io.on('connection', (socket) => {
     socket.on('join_room', (roomId) => {
       console.log(`${socket.id} joined room ${roomId}`);
       socket.join(roomId);
+
+      const playPauseDto: PlayPauseDto = { action: PlayPauseActionEnum.PAUSE, time: videoTime };
+      console.log('playPauseDto join_room', playPauseDto);
+      io.sockets.in(roomId).emit('play_pause', playPauseDto);
     });
 
-    socket.on('play-pause', () => {
-      io.sockets.in(roomId).emit('play');
+    socket.on('play_pause', (dto: PlayPauseDto) => {
+      videoState = dto.action;
+      videoTime = dto.time;
+      console.log('play_pause', dto);
+      io.sockets.in(roomId).emit('play_pause', dto);
     });
 
-    socket.on('play', () => {});
+    socket.on('range', (time: number) => {
+      console.log('range', time);
+      io.sockets.in(roomId).emit('range', time);
+    });
 
     socket.on('disconnect', () => {
       console.log('A user disconnected');
@@ -53,6 +70,27 @@ io.on('connection', (socket) => {
 });
 
 app.use('/api', AppRoutes);
+
+app.get('/videoplayer', (req: Request, res: Response) => {
+  console.log('here')
+  const range = req.headers.range ? req.headers.range : '';
+  const videoSize = fs.statSync(videoPath).size
+  const start = Number(range.replace(/\D/g, ""))
+  const end = Math.min(start + chunkSize, videoSize - 1)
+  const contentLength = end - start + 1;
+  const headers = {
+      "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": contentLength,
+      "Content-Type": "video/mp4"
+  }
+  res.writeHead(206, headers)
+  const stream = fs.createReadStream(videoPath, {
+      start,
+      end
+  })
+  stream.pipe(res);
+})
 
 app.route('/test').get((req: Request, res: Response) => {
     console.log('here');
@@ -63,40 +101,3 @@ const port = process.env.PORT;
 server.listen(port, () => {
   console.log(`server started on port ${port}`);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// app.get('/videoplayer', (req: Request, res: Response) => {
-//   const range = req.headers.range ? req.headers.range : '';
-//   const videoPath = path.join(__dirname, 'public', '2s.mp4');
-//   const videoSize = fs.statSync(videoPath).size
-//   const chunkSize = 1 * 1e6;
-//   const start = Number(range.replace(/\D/g, ""))
-//   const end = Math.min(start + chunkSize, videoSize - 1)
-//   const contentLength = end - start + 1;
-//   const headers = {
-//       "Content-Range": `bytes ${start}-${end}/${videoSize}`,
-//       "Accept-Ranges": "bytes",
-//       "Content-Length": contentLength,
-//       "Content-Type": "video/mp4"
-//   }
-//   res.writeHead(206, headers)
-//   const stream = fs.createReadStream(videoPath, {
-//       start,
-//       end
-//   })
-//   stream.pipe(res)
-// })
-
