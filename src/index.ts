@@ -23,7 +23,7 @@ const io = new Server(server, {
 });
 
 const roomId = '123';
-const videoPath = path.join(process.cwd(), 'public', '2s.mp4');
+const videoPath = path.join(__dirname, '..', 'public', '2s.mp4');
 const chunkSize = 1 * 1e6;
 
 let videoState: PlayPauseActionEnum = PlayPauseActionEnum.PAUSE;
@@ -72,7 +72,8 @@ io.on('connection', (socket) => {
 app.use('/api', AppRoutes);
 
 app.get('/videoplayer', (req: Request, res: Response) => {
-  console.log('here')
+  console.log('getting video content', req.headers.range);
+
   const range = req.headers.range ? req.headers.range : '';
   const videoSize = fs.statSync(videoPath).size
   const start = Number(range.replace(/\D/g, ""))
