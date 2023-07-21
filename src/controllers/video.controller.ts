@@ -1,10 +1,14 @@
-import { Request, Response } from "express";
-import path from 'path';
+import { NextFunction, Request, Response } from 'express';
+import * as path from 'path';
 import { stat, readdir } from 'fs/promises';
 import { createReadStream } from 'fs';
 
+import { SelectVideoDto } from '../dto/select-video.dto';
+
+// const dirname = path.resolve();
 const videoFolderPath = path.join(__dirname, '..', '..', 'public');
-const videoPath = path.join(videoFolderPath, 'video.mp4');
+let selectedVideo = 'video.mp4';
+const videoPath = path.join(videoFolderPath, selectedVideo);
 const chunkSize = 1 * 1e6;
 
 export const VideoController = {
@@ -31,8 +35,21 @@ export const VideoController = {
     stream.pipe(res);
   },
 
-  getAvailableVideosFromFs: async (req: Request, res: Response) => {
+  getAvailableVideosFromFs: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const folderContent = await readdir(videoFolderPath, { encoding: 'utf-8' });
+      return res.json(folderContent);
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  selectVideoFromFs: async (req: Request, res: Response, next: NextFunction) => {
+    const dto: SelectVideoDto = req.body;
     const folderContent = await readdir(videoFolderPath, { encoding: 'utf-8' });
-    res.send({ videos: folderContent });
+    const videoObject = folderContent.find((str) => str == dto.videoName);
+    if (!videoObject) {
+      next(new Error(`video with name: ${dto.videoName} isn't found`));
+    }
   }
 }
