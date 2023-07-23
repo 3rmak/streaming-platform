@@ -1,9 +1,10 @@
 import { Server, Socket } from 'socket.io';
 import { PlayPauseDto } from '../dto/play_pause.dto';
 import { PlayPauseActionEnum } from '../dto/play_pause-action.enum';
-import { ChatSocket } from './chat.socket';
+// import { ChatSocket } from './chat.socket';
 
-const roomId = process.env.DEFAULT_ROOM_ID;
+// const roomId = process.env.DEFAULT_ROOM_ID;
+const roomId = '123';
 
 let videoState: PlayPauseActionEnum = PlayPauseActionEnum.PAUSE;
 let videoTime: number = 0;
@@ -13,10 +14,10 @@ export const initializeSockets = (io: Server) => {
     console.log('a user connected');
     io.sockets.in(roomId).emit('action', { message: `${socket.id} connected the room` });
 
-    // socket.on('message', (message) => {
-    //   console.log(`${socket.id} send ${message}`);
-    //   io.sockets.in(roomId).emit('message', { sender: socket.id, message: message });
-    // })
+    socket.on('message', (message) => {
+      console.log(`${socket.id} send ${message} to room ${roomId}`);
+      io.sockets.in(roomId).emit('message', { sender: socket.id, message: message });
+    })
 
     // socket.on('new-room', (roomName) => {
     //   console.log(`${socket.id} created room ${roomName}`);
@@ -48,6 +49,4 @@ export const initializeSockets = (io: Server) => {
       io.sockets.in(roomId).emit('action',{ message: `${socket.id} disconnected the room` });
     });
   });
-
-  ChatSocket(io);
 };

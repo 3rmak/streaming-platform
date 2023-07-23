@@ -8,13 +8,13 @@ import { SelectVideoDto } from '../dto/select-video.dto';
 // const dirname = path.resolve();
 const videoFolderPath = path.join(__dirname, '..', '..', 'public');
 let selectedVideo = 'video.mp4';
-const videoPath = path.join(videoFolderPath, selectedVideo);
 const chunkSize = 1 * 1e6;
 
 export const VideoController = {
   getVideoContent: async (req: Request, res: Response) => {
     console.log('getting video content', req.headers.range);
 
+    const videoPath = path.join(videoFolderPath, selectedVideo);
     const range = req.headers.range ? req.headers.range : '';
     const { size: videoSize } = await stat(videoPath);
     // const videoSize = fs.statSync(videoPath).size
@@ -51,5 +51,7 @@ export const VideoController = {
     if (!videoObject) {
       next(new Error(`video with name: ${dto.videoName} isn't found`));
     }
+
+    selectedVideo = dto.videoName;
   }
 }

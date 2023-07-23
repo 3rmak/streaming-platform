@@ -13,7 +13,8 @@ VideoRouter.get('/server-videos', (req: Request, res: Response, next: NextFuncti
   return VideoController.getAvailableVideosFromFs(req, res, next);
 });
 
-VideoRouter.post('/select', [ValidationMiddleware(SelectVideoDto)],
+// [ValidationMiddleware(SelectVideoDto)]
+VideoRouter.post('/select',
   (req: Request, res: Response, next: NextFunction)=>{
   return VideoController.selectVideoFromFs(req, res, next);
 });
