@@ -14,8 +14,8 @@ dotenv.config();
 const app: Express = express();
 // app.use(cors({ origin: process.env.CORS_ALLOWED_HOSTS }))
 app.use(cors({ origin: '*' }))
-app.use(bodyParser.urlencoded());
 
+app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
 const server = createServer(app);
@@ -29,7 +29,7 @@ initializeSockets(io);
 
 app.use('/api', AppRoutes)
 
-app.route('/test').get((req: Request, res: Response) => {
+app.route('/api/test').get((req: Request, res: Response) => {
     console.log('here');
     return res.send('init test')  ;
   });

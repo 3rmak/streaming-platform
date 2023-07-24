@@ -5,7 +5,6 @@ import { createReadStream } from 'fs';
 
 import { SelectVideoDto } from '../dto/select-video.dto';
 
-// const dirname = path.resolve();
 const videoFolderPath = path.join(__dirname, '..', '..', 'public');
 let selectedVideo = 'video.mp4';
 const chunkSize = 1 * 1e6;
@@ -53,5 +52,6 @@ export const VideoController = {
     }
 
     selectedVideo = dto.videoName;
+    return res.send({ selected: selectedVideo });
   }
 }
