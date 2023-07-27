@@ -5,8 +5,8 @@ import { SelectVideoDto } from '../dto/select-video.dto';
 
 export const VideoRouter = Router();
 
-VideoRouter.get('/videoplayer', (req: Request, res: Response)=>{
-  return VideoController.getVideoContent(req, res);
+VideoRouter.get('/videoplayer', (req: Request, res: Response, next: NextFunction)=>{
+  return VideoController.getVideoContent(req, res, next);
 });
 
 VideoRouter.get('/server-videos', (req: Request, res: Response, next: NextFunction)=>{
@@ -17,4 +17,9 @@ VideoRouter.get('/server-videos', (req: Request, res: Response, next: NextFuncti
 VideoRouter.post('/select',
   (req: Request, res: Response, next: NextFunction)=>{
   return VideoController.selectVideoFromFs(req, res, next);
+});
+
+VideoRouter.get('/download',
+(req: Request, res: Response, next: NextFunction)=>{
+  return VideoController.downloadM3U8Content(req, res, next);
 });
