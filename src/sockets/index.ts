@@ -39,9 +39,9 @@ export const initializeSockets = (io: Server) => {
       io.sockets.in(roomId).emit('play_pause', dto);
     });
 
-    socket.on('range', (time: number) => {
-      console.log('range', time);
-      io.sockets.in(roomId).emit('range', time);
+    socket.on('rewind', (time: number) => {
+      console.log('rewind', time);
+      io.sockets.in(roomId).emit('rewind', time);
     });
 
     socket.on('disconnect', () => {

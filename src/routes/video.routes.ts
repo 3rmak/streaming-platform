@@ -19,7 +19,3 @@ VideoRouter.post('/select',
   return VideoController.selectVideoFromFs(req, res, next);
 });
 
-VideoRouter.get('/download',
-(req: Request, res: Response, next: NextFunction)=>{
-  return VideoController.downloadM3U8Content(req, res, next);
-});
